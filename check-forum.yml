@@ -1,0 +1,34 @@
+# Taro file ini di: .github/workflows/check-forum.yml (di dalam repo lo)
+
+name: Check SCELE Forum
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"  # jalan tiap 30 menit
+  workflow_dispatch:         # biar bisa dijalanin manual juga dari tab Actions
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - run: pip install -r requirements.txt
+
+      - run: python forum_notifier.py
+        env:
+          SCELE_RSS_URL: ${{ secrets.SCELE_RSS_URL }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+
+      - name: Simpen seen_posts.json biar gak notif ulang
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add seen_posts.json
+          git diff --staged --quiet || git commit -m "Update seen posts"
+          git push
