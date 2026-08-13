@@ -33,8 +33,10 @@ Fase 1 ini sekalian gabungin dua sumber yang tadinya direncanain kepisah
    ```
    Jalanin manual dulu buat mastiin gak error:
    ```bash
-   export $(cat .env | xargs) && python forum_notifier.py
+   python forum_notifier.py
    ```
+   (Script otomatis baca `.env` lewat `python-dotenv`, gak perlu `export`/`source` manual lagi.)
+
    Set `DEBUG_SAVE_HTML=1` di `.env` kalau mau nyimpen HTML mentah hasil
    fetch ke folder `debug_html/` (berguna buat ngecek kalau scraping gak
    nemu apa-apa padahal harusnya ada).
@@ -48,8 +50,25 @@ Fase 1 ini sekalian gabungin dua sumber yang tadinya direncanain kepisah
 
    **Catatan risiko:** ini nyimpen password akun SCELE lo sebagai GitHub
    secret dan dipake login otomatis tiap jam dari server GitHub (bukan dari
-   device lo). Kalau repo/akun GitHub lo kecompromise, password SCELE lo
-   ikut kebawa. Pastiin repo private dan jangan kasih akses ke orang lain.
+   device lo). Secret di GitHub Actions terenkripsi dan gak pernah keliatan
+   di kode meski repo-nya public, tapi kalau akun GitHub lo sendiri
+   kecompromise (misal password GitHub lo bocor), penyerang bisa buka
+   Settings > Secrets dan re-set workflow buat nge-leak nilai secret itu.
+   Jaga akun GitHub lo (aktifin 2FA) sama kayak lo jaga password SCELE.
+
+## Operasional
+
+- **Testing manual (lokal):** pastiin `venv` aktif, lalu `python forum_notifier.py`.
+  Cek output di terminal + `seen_posts.json` (isinya nambah tiap ada entry baru).
+- **Jalanin manual di GitHub Actions** (gak perlu nunggu jadwal jam-an):
+  tab **Actions** > pilih workflow **Check SCELE Forum** > tombol **Run workflow**.
+- **Liat log run yang udah lewat / debug kalau gagal:** tab **Actions** > klik
+  run yang mau dicek > klik job **check** > expand step yang error.
+- **Update link forum yang dipantau:** edit `.env` (lokal) dan/atau secret
+  `SCELE_FORUM_URLS` di GitHub (Settings > Secrets and variables > Actions >
+  edit `SCELE_FORUM_URLS`).
+- **Berhentiin sementara:** tab **Actions** > pilih workflow **Check SCELE
+  Forum** > menu **...** > **Disable workflow**.
 
 ## Struktur file
 

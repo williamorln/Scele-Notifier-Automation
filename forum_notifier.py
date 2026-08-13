@@ -20,6 +20,9 @@ from urllib.parse import urljoin
 
 import requests
 from bs4 import BeautifulSoup
+from dotenv import load_dotenv
+
+load_dotenv()  # no-op kalau .env gak ada (misal di GitHub Actions, env udah diisi lewat secrets)
 
 BASE_URL = "https://scele.cs.ui.ac.id"
 LOGIN_URL = f"{BASE_URL}/login/index.php"
