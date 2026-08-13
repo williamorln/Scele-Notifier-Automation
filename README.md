@@ -1,7 +1,11 @@
-# SCELE Forum Notifier (Fase 1)
+# SCELE Notifier (Fase 1)
 
-Bot sederhana: cek RSS forum SCELE, kirim notif Telegram kalau ada post baru.
-Ini baru forum doang (Fase 1). Timeline/assignment nyusul di Fase 2.
+Bot sederhana: login ke SCELE (Moodle) pake akun sendiri, cek forum diskusi
+dan Dashboard Timeline, kirim notif Telegram kalau ada post/deadline baru.
+
+RSS forum gak tersedia di instance SCELE ini (dimatiin di level admin), jadi
+Fase 1 ini sekalian gabungin dua sumber yang tadinya direncanain kepisah
+(forum di Fase 1, Timeline di Fase 2) lewat satu metode: login session.
 
 ## Setup
 
@@ -14,36 +18,46 @@ Ini baru forum doang (Fase 1). Timeline/assignment nyusul di Fase 2.
    - Chat ke [@userinfobot](https://t.me/userinfobot)
    - Dia bakal balikin Chat ID lo
 
-3. **Ambil link RSS forum SCELE**
-   - Login ke SCELE
-   - Masuk ke forum yang mau dipantau
-   - Cari opsi RSS/subscribe (biasanya ada icon RSS di halaman forum, atau di Preferences > RSS)
-   - Copy link-nya (link ini udah termasuk token pribadi lo, jangan disebar)
+3. **Cari link forum yang mau dipantau (opsional)**
+   - Login ke SCELE, masuk ke course-nya, buka forum yang mau dipantau
+   - Copy link halaman forum-nya, bentuknya `.../mod/forum/view.php?id=XXXXX`
+   - Boleh lebih dari satu, nanti dipisah koma di `.env`
+   - Boleh dikosongin kalau cuma mau pantau Timeline dulu
 
 4. **Setup lokal buat testing**
    ```bash
    pip install -r requirements.txt
    cp .env.example .env
-   # isi .env dengan 3 nilai di atas
+   # isi .env: SCELE_USERNAME, SCELE_PASSWORD, SCELE_FORUM_URLS (opsional),
+   # TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
    ```
    Jalanin manual dulu buat mastiin gak error:
    ```bash
    export $(cat .env | xargs) && python forum_notifier.py
    ```
+   Set `DEBUG_SAVE_HTML=1` di `.env` kalau mau nyimpen HTML mentah hasil
+   fetch ke folder `debug_html/` (berguna buat ngecek kalau scraping gak
+   nemu apa-apa padahal harusnya ada).
 
 5. **Setup GitHub Actions (biar jalan otomatis, gratis)**
-   - Push project ini ke repo GitHub baru
-   - Pindahin `check-forum.yml` ke folder `.github/workflows/check-forum.yml`
-   - Di repo, masuk **Settings > Secrets and variables > Actions**, tambahin 3 secret:
-     `SCELE_RSS_URL`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`
-   - Selesai, bot bakal jalan otomatis tiap 30 menit
+   - Push project ini ke repo GitHub
+   - `check-forum.yml` udah ada di `.github/workflows/check-forum.yml`
+   - Di repo, masuk **Settings > Secrets and variables > Actions**, tambahin 5 secret:
+     `SCELE_USERNAME`, `SCELE_PASSWORD`, `SCELE_FORUM_URLS`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`
+   - Selesai, bot bakal jalan otomatis tiap 1 jam
+
+   **Catatan risiko:** ini nyimpen password akun SCELE lo sebagai GitHub
+   secret dan dipake login otomatis tiap jam dari server GitHub (bukan dari
+   device lo). Kalau repo/akun GitHub lo kecompromise, password SCELE lo
+   ikut kebawa. Pastiin repo private dan jangan kasih akses ke orang lain.
 
 ## Struktur file
 
 ```
-forum_notifier.py    -> logic utama
-requirements.txt     -> dependencies
-.env.example          -> template config (jangan commit .env asli)
-check-forum.yml       -> workflow GitHub Actions (pindahin ke .github/workflows/)
-seen_posts.json       -> otomatis dibikin script, nyimpen post yang udah dinotif
+forum_notifier.py                  -> logic utama (login, scrape, notif)
+requirements.txt                   -> dependencies
+.env.example                       -> template config (jangan commit .env asli)
+.github/workflows/check-forum.yml  -> workflow GitHub Actions
+seen_posts.json                    -> otomatis dibikin script, nyimpen post/event yang udah dinotif
+debug_html/                        -> opsional, HTML mentah buat debug (gitignored)
 ```

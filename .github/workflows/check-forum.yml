@@ -1,11 +1,12 @@
-# Taro file ini di: .github/workflows/check-forum.yml (di dalam repo lo)
-
 name: Check SCELE Forum
 
 on:
   schedule:
-    - cron: "*/30 * * * *"  # jalan tiap 30 menit
-  workflow_dispatch:         # biar bisa dijalanin manual juga dari tab Actions
+    - cron: "0 * * * *"  # jalan tiap 1 jam, di menit ke-0
+  workflow_dispatch:      # biar bisa dijalanin manual juga dari tab Actions
+
+permissions:
+  contents: write  # dibutuhin biar step terakhir bisa commit & push seen_posts.json
 
 jobs:
   check:
@@ -21,7 +22,9 @@ jobs:
 
       - run: python forum_notifier.py
         env:
-          SCELE_RSS_URL: ${{ secrets.SCELE_RSS_URL }}
+          SCELE_USERNAME: ${{ secrets.SCELE_USERNAME }}
+          SCELE_PASSWORD: ${{ secrets.SCELE_PASSWORD }}
+          SCELE_FORUM_URLS: ${{ secrets.SCELE_FORUM_URLS }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
 
