@@ -43,7 +43,7 @@ def save_seen(seen: set) -> None:
         json.dump(list(seen), f)
 
 
-def save_debug_html(name: str, html: str) -> None:
+def save_debug_html(name: str, content: str) -> None:
     """Simpen HTML mentah hasil fetch, buat verifikasi manual selector.
     Cuma aktif kalau env DEBUG_SAVE_HTML=1, biar gak numpuk file pas
     jalan otomatis di GitHub Actions.
@@ -52,7 +52,7 @@ def save_debug_html(name: str, html: str) -> None:
         return
     os.makedirs(DEBUG_HTML_DIR, exist_ok=True)
     with open(os.path.join(DEBUG_HTML_DIR, name), "w", encoding="utf-8") as f:
-        f.write(html)
+        f.write(content)
 
 
 def send_telegram(token: str, chat_id: str, message: str) -> None:
@@ -162,13 +162,12 @@ def fetch_timeline_entries(session: requests.Session, seen: set) -> list:
     """
     sesskey = get_sesskey(session)
 
-    today_midnight = int(time.time()) - (int(time.time()) % 86400)
     payload = [{
         "index": 0,
         "methodname": "core_calendar_get_action_events_by_timesort",
         "args": {
             "limitnum": 50,
-            "timesortfrom": today_midnight,
+            "timesortfrom": int(time.time()),
             "limittononsuspendedevents": True,
         },
     }]
