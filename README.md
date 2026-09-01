@@ -46,10 +46,10 @@ Fase 1 ini sekalian gabungin dua sumber yang tadinya direncanain kepisah
    - `check-forum.yml` udah ada di `.github/workflows/check-forum.yml`
    - Di repo, masuk **Settings > Secrets and variables > Actions**, tambahin 5 secret:
      `SCELE_USERNAME`, `SCELE_PASSWORD`, `SCELE_FORUM_URLS`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`
-   - Selesai, bot bakal jalan otomatis tiap 1 jam
+   - Selesai, bot bakal jalan otomatis tiap 4 jam
 
    **Catatan risiko:** ini nyimpen password akun SCELE lo sebagai GitHub
-   secret dan dipake login otomatis tiap jam dari server GitHub (bukan dari
+   secret dan dipake login otomatis tiap 4 jam dari server GitHub (bukan dari
    device lo). Secret di GitHub Actions terenkripsi dan gak pernah keliatan
    di kode meski repo-nya public, tapi kalau akun GitHub lo sendiri
    kecompromise (misal password GitHub lo bocor), penyerang bisa buka

@@ -59,11 +59,31 @@ def save_debug_html(name: str, content: str) -> None:
 
 
 def send_telegram(token: str, chat_id: str, message: str) -> None:
-    """Kirim pesan ke Telegram lewat Bot API."""
+    """Kirim pesan ke Telegram lewat Bot API (format HTML)."""
     url = f"https://api.telegram.org/bot{token}/sendMessage"
-    resp = requests.post(url, data={"chat_id": chat_id, "text": message})
+    resp = requests.post(
+        url,
+        data={
+            "chat_id": chat_id,
+            "text": message,
+            "parse_mode": "HTML",
+            "disable_web_page_preview": "true",
+        },
+    )
     if not resp.ok:
         print(f"Gagal kirim Telegram: {resp.status_code} {resp.text}")
+
+
+def format_message(entry: dict) -> str:
+    """Susun pesan notif jadi rapi (bold judul, ikon per tipe, link jadi tombol)."""
+    is_timeline = entry["id"].startswith("timeline:")
+    icon, label = ("⏰", "Timeline") if is_timeline else ("\U0001f4ac", "Forum")
+
+    lines = [f"{icon} <b>{label}</b>", html.escape(entry["title"])]
+    if entry.get("course"):
+        lines.append(f"\U0001f4d8 {html.escape(entry['course'])}")
+    lines.append(f'\U0001f517 <a href="{html.escape(entry["link"])}">Buka di SCELE</a>')
+    return "\n".join(lines)
 
 
 def scele_login(session: requests.Session, username: str, password: str) -> None:
@@ -194,9 +214,10 @@ def fetch_timeline_entries(session: requests.Session, seen: set) -> list:
             continue
 
         link = (event.get("action") or {}).get("url") or event.get("url", DASHBOARD_URL)
-        title = html.unescape(f"{event['name']} ({event['course']['fullname']})")
+        title = html.unescape(event["name"])
+        course = html.unescape(event["course"]["fullname"])
 
-        new_entries.append({"id": entry_id, "title": title, "link": link})
+        new_entries.append({"id": entry_id, "title": title, "course": course, "link": link})
         seen.add(entry_id)
 
     return new_entries
@@ -233,9 +254,7 @@ def main():
         print(f"Gagal cek timeline: {e}")
 
     for entry in all_new:
-        sumber = "Forum" if entry["id"].startswith("forum:") else "Timeline"
-        message = f"[{sumber}] {entry['title']}\n{entry['link']}"
-        send_telegram(bot_token, chat_id, message)
+        send_telegram(bot_token, chat_id, format_message(entry))
         print(f"Notified: {entry['title']}")
 
     save_seen(seen)
